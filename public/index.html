@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DTrader</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:'Inter',-apple-system,sans-serif;background:oklch(97% 0.005 200);color:oklch(25% 0.01 200)}
+.page{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px}
+.brand{text-align:center;margin-bottom:32px}
+.brand-logo{width:56px;height:56px;background:oklch(52% 0.2 18);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:oklch(98% 0.005 18);margin-bottom:14px;box-shadow:0 4px 20px oklch(52% 0.2 18 / 0.25)}
+.brand h1{font-size:24px;font-weight:800;letter-spacing:-0.02em;color:oklch(20% 0.01 200)}
+.brand p{font-size:13px;color:oklch(55% 0.01 200);margin-top:4px}
+.auth{width:100%;max-width:360px}
+.tabs{display:flex;background:oklch(93% 0.005 200);border-radius:12px;padding:4px;margin-bottom:24px}
+.tab{flex:1;padding:11px;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:oklch(50% 0.01 200);transition:all 0.2s cubic-bezier(0.16,1,0.3,1)}
+.tab.active{background:oklch(100% 0 0);color:oklch(20% 0.01 200);box-shadow:0 2px 8px oklch(0% 0 0 / 0.06)}
+.tab:not(.active):active{transform:scale(0.97)}
+.form{display:none;animation:fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)}
+.form.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.field{margin-bottom:16px}
+.field-label{display:block;font-size:12px;font-weight:600;color:oklch(50% 0.01 200);margin-bottom:6px;letter-spacing:0.02em}
+.field-input{width:100%;padding:14px 16px;background:oklch(100% 0 0);border:1.5px solid oklch(88% 0.005 200);border-radius:11px;font-size:15px;font-family:inherit;color:oklch(20% 0.01 200);outline:none;transition:border 0.15s,box-shadow 0.15s}
+.field-input::placeholder{color:oklch(70% 0.005 200)}
+.field-input:focus{border-color:oklch(60% 0.14 175);box-shadow:0 0 0 3px oklch(60% 0.14 175 / 0.1)}
+.field-input.error{border-color:oklch(60% 0.22 20);box-shadow:0 0 0 3px oklch(60% 0.22 20 / 0.08)}
+.phone-row{display:flex;gap:8px}
+.phone-prefix{width:68px;padding:14px 8px;background:oklch(95% 0.005 200);border:1.5px solid oklch(88% 0.005 200);border-radius:11px;font-size:14px;font-weight:600;color:oklch(40% 0.01 200);text-align:center}
+.phone-row .field-input{flex:1}
+.submit{width:100%;padding:15px;background:oklch(55% 0.15 175);color:oklch(98% 0.005 175);border:none;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;box-shadow:0 4px 16px oklch(55% 0.15 175 / 0.3);transition:transform 0.1s,opacity 0.1s}
+.submit:active{transform:scale(0.98)}
+.submit:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.submit.loading{pointer-events:none;opacity:0.7}
+.msg{font-size:12px;text-align:center;margin-top:12px;min-height:18px;font-weight:500}
+.msg.error{color:oklch(55% 0.2 20)}
+.msg.success{color:oklch(55% 0.15 150)}
+.footer{margin-top:24px;text-align:center;font-size:12px;color:oklch(55% 0.01 200)}
+.footer a{color:oklch(50% 0.14 175);text-decoration:none;font-weight:600}
+.pass-wrap{position:relative}
+.pass-wrap .field-input{padding-right:48px}
+.pass-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;color:oklch(60% 0.01 200);padding:4px}
+.terms{font-size:11px;color:oklch(55% 0.01 200);text-align:center;margin-top:14px;line-height:1.5}
+.terms a{color:oklch(50% 0.14 175);text-decoration:none}
+@media(min-width:640px){
+  .page{padding:40px}
+  .auth{padding:32px;background:oklch(100% 0 0);border-radius:20px;box-shadow:0 8px 40px oklch(0% 0 0 / 0.04),0 1px 3px oklch(0% 0 0 / 0.03)}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="brand">
+    <div class="brand-logo">DT</div>
+    <h1>DTrader</h1>
+    <p>Trade smarter, not harder</p>
+  </div>
+
+  <div class="auth">
+    <div class="tabs">
+      <button class="tab active" data-tab="login">Sign in</button>
+      <button class="tab" data-tab="register">Create account</button>
+    </div>
+
+    <form class="form active" id="loginForm" autocomplete="on">
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input class="field-input" type="email" id="lEmail" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <div class="pass-wrap">
+          <input class="field-input" type="password" id="lPass" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="pass-toggle" data-target="lPass">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="submit" id="lBtn">Sign in</button>
+      <div class="msg" id="lMsg"></div>
+    </form>
+
+    <form class="form" id="registerForm" autocomplete="on">
+      <div class="field">
+        <label class="field-label">Full name</label>
+        <input class="field-input" type="text" id="rName" placeholder="John Doe" required autocomplete="name">
+      </div>
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input class="field-input" type="email" id="rEmail" placeholder="you@example.com" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label class="field-label">Phone number</label>
+        <div class="phone-row">
+          <div class="phone-prefix">+254</div>
+          <input class="field-input" type="tel" id="rPhone" placeholder="712 345 678" autocomplete="tel">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Password</label>
+        <div class="pass-wrap">
+          <input class="field-input" type="password" id="rPass" placeholder="Min 6 characters" required minlength="6" autocomplete="new-password">
+          <button type="button" class="pass-toggle" data-target="rPass">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="submit" id="rBtn">Create account</button>
+      <div class="msg" id="rMsg"></div>
+      <div class="terms">By registering you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a></div>
+    </form>
+
+    <div class="footer">
+      Need help? <a href="#">Contact support</a>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+if (isLoggedIn()) window.location.href = '/app';
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.form').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab + 'Form').classList.add('active');
+    document.querySelectorAll('.msg').forEach(m => m.textContent = '');
+  });
+});
+
+document.querySelectorAll('.pass-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  });
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('lBtn');
+  const msg = document.getElementById('lMsg');
+  msg.textContent = '';
+  msg.className = 'msg';
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = 'Signing in...';
+
+  try {
+    const data = await login(
+      document.getElementById('lEmail').value.trim(),
+      document.getElementById('lPass').value
+    );
+    if (data.success) {
+      msg.textContent = 'Welcome back!';
+      msg.className = 'msg success';
+      setTimeout(() => { window.location.href = '/app'; }, 300);
+    } else {
+      msg.textContent = data.message || 'Invalid credentials';
+      msg.className = 'msg error';
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.textContent = 'Sign in';
+    }
+  } catch(err) {
+    msg.textContent = 'Connection error. Try again.';
+    msg.className = 'msg error';
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = 'Sign in';
+  }
+});
+
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('rBtn');
+  const msg = document.getElementById('rMsg');
+  msg.textContent = '';
+  msg.className = 'msg';
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.textContent = 'Creating account...';
+
+  const password = document.getElementById('rPass').value;
+  if (password.length < 6) {
+    msg.textContent = 'Password must be at least 6 characters';
+    msg.className = 'msg error';
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = 'Create account';
+    return;
+  }
+
+  try {
+    const data = await register(
+      document.getElementById('rEmail').value.trim(),
+      password,
+      document.getElementById('rName').value.trim(),
+      document.getElementById('rPhone').value.trim()
+    );
+    if (data.success) {
+      msg.textContent = 'Account created!';
+      msg.className = 'msg success';
+      setTimeout(() => { window.location.href = '/app'; }, 300);
+    } else {
+      msg.textContent = data.message || 'Registration failed';
+      msg.className = 'msg error';
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.textContent = 'Create account';
+    }
+  } catch(err) {
+    msg.textContent = 'Connection error. Try again.';
+    msg.className = 'msg error';
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = 'Create account';
+  }
+});
+</script>
+</body>
+</html>

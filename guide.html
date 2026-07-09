@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- skill:chrome -->
+<style>
+/* Credit line — bottom-right */
+.design-ui-credit {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  font: 11px/1 system-ui, sans-serif;
+  color: rgba(128,128,128,0.5);
+  pointer-events: none;
+  z-index: 2147483647;
+  transition: opacity 0.4s ease;
+  user-select: none;
+  letter-spacing: 0.02em;
+}
+
+/* Hide chrome on touch devices */
+@media (hover: none) {
+  .design-ui-credit { display: none; }
+}
+
+/* Print fixes */
+@media print {
+  * {
+    transition: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .design-ui-credit { display: none !important; }
+}
+
+</style>
+<script>
+(function () {
+    // Design-ui pages are single compositions, so the whole body is editable.
+    function markEditable() {
+        document.body.classList.add('artifact-editable');
+    }
+
+    // Credit badge with idle-fade. Hover devices only.
+    function initChromeUI() {
+        if (!matchMedia('(hover: hover)').matches) return;
+
+        var credit = document.createElement('div');
+        credit.className = 'design-ui-credit';
+        credit.setAttribute('aria-hidden', 'true');
+        credit.innerHTML = '\u{1F49C} by ClickUp Brain';
+        document.body.appendChild(credit);
+
+        var timer = null;
+        var fade = function (out) { credit.style.opacity = out ? '0' : ''; };
+        fade(true);
+        var show = function () {
+            fade(false);
+            clearTimeout(timer);
+            timer = setTimeout(function () { fade(true); }, 3000);
+        };
+        document.addEventListener('mousemove', show);
+        show();
+    }
+
+    function init() {
+        markEditable();
+        initChromeUI();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+</script>
+<!-- /skill:chrome -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DTrader Full Project Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#f8f9fa;color:#1a1a2e;line-height:1.7;padding:20px}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:26px;font-weight:700;margin-bottom:6px}
+.sub{font-size:13px;color:#666;margin-bottom:28px}
+h2{font-size:18px;font-weight:700;margin:28px 0 10px;padding-top:16px;border-top:1px solid #e5e5e5}
+h2:first-of-type{border-top:none;padding-top:0}
+h3{font-size:14px;font-weight:600;margin:16px 0 6px;color:#444}
+p{margin-bottom:10px;font-size:13px}
+.file{margin:12px 0;background:#1e1e2e;border-radius:8px;overflow:hidden}
+.file-hdr{padding:6px 14px;background:#2a2a3e;display:flex;align-items:center;justify-content:space-between}
+.file-name{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#a6e3a1}
+.file-lang{font-size:9px;color:#888;text-transform:uppercase}
+pre{padding:14px;overflow-x:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.55;color:#cdd6f4;white-space:pre;tab-size:2}
+.step{background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:14px 16px;margin:10px 0}
+.step-num{display:inline-block;width:22px;height:22px;background:#00a79e;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:11px;font-weight:700;margin-right:8px}
+.note{background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px}
+.note strong{color:#856404}
+ul{margin:6px 0 10px 18px;font-size:13px}li{margin:3px 0}
+code{font-family:'IBM Plex Mono',monospace;background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:11px}
+.tree{background:#1e1e2e;border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#a6e3a1;line-height:1.6;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>DTrader: Complete Project</h1>
+<p class="sub">Step-by-step from zero to running app. Backend + frontend + auth + deposits + trading.</p>
+
+<h2>Final Project Structure</h2>
+<div class="tree">dtrader/
+├── .env
+├── package.json
+├── server.js
+├── setup-db.js
+├── db/
+│   └── database.sqlite        (auto-created)
+├── middleware/
+│   └── auth.js
+├── routes/
+│   ├── auth.js
+│   ├── accounts.js
+│   ├── deposits.js
+│   └── trades.js
+└── public/
+    ├── index.html             (login/register page)
+    ├── app.html               (main trading app)
+    └── js/
+        └── api.js             (shared API helper)</div>
+
+<h2>Step 1: Create the project</h2>
+<div class="step"><span class="step-num">1</span>Open terminal and run:</div>
+<div class="file"><div class="file-hdr"><span class="file-name">terminal</span><span class="file-lang">bash</span></div>
+<pre>mkdir dtrader
+cd dtrader
+mkdir db middleware routes public public/js
+npm init -y</pre></div>
+
+<h2>Step 2: Install dependencies</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">terminal</span><span class="file-lang">bash</span></div>
+<pre>npm install express cors bcryptjs jsonwebtoken better-sqlite3 axios dotenv helmet express-rate-limit
+npm install -D nodemon</pre></div>
+
+<h2>Step 3: package.json scripts</h2>
+<p>Open <code>package.json</code> and replace the scripts section:</p>
+<div class="file"><div class="file-hdr"><span class="file-name">package.json (scripts only)</span><span class="file-lang">json</span></div>
+<pre>"scripts": {
+  "start": "node server.js",
+  "dev": "nodemon server.js",
+  "setup": "node setup-db.js"
+}</pre></div>
+
+<h2>Step 4: .env</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">.env</span><span class="file-lang">env</span></div>
+<pre>PORT=3000
+JWT_SECRET=put-a-random-64-character-string-here
+
+# Tuma Payment Gateway
+TUMA_API_URL=https://api.tuma.co.ke
+TUMA_EMAIL=your-email@example.com
+TUMA_API_KEY=your-tuma-api-key
+TUMA_CALLBACK_URL=https://your-domain.com/api/deposits/callback
+
+# Exchange rate (KES per 1 USD)
+USD_KES_RATE=130</pre></div>
+
+<h2>Step 5: setup-db.js</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">setup-db.js</span><span class="file-lang">javascript</span></div>
+<pre>const Database = require('better-sqlite3');
+const path = require('path');
+const db = new Database(path.join(__dirname, 'db', 'database.sqlite'));
+db.pragma('journal_mode = WAL');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    phone TEXT,
+    password TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS accounts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL CHECK(type IN ('demo','real')),
+    balance REAL DEFAULT 0,
+    currency TEXT DEFAULT 'USD',
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  CREATE TABLE IF NOT EXISTS deposits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL,
+    method TEXT NOT NULL,
+    amount REAL NOT NULL,
+    phone TEXT,
+    status TEXT DEFAULT 'pending',
+    reference TEXT UNIQUE,
+    checkout_id TEXT,
+    mpesa_receipt TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  CREATE TABLE IF NOT EXISTS trades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    account_id INTEGER NOT NULL,
+    symbol TEXT,
+    trade_type TEXT,
+    direction TEXT,
+    stake REAL,
+    payout REAL,
+    entry_price REAL,
+    exit_price REAL,
+    result TEXT DEFAULT 'pending',
+    pnl REAL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_deposits_checkout ON deposits(checkout_id);
+  CREATE INDEX IF NOT EXISTS idx_deposits_ref ON deposits(reference);
+`);
+console.log('✅ Database ready');
+db.close();</pre></div>
+
+<h2>Step 6: server.js</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">server.js</span><span class="file-lang">javascript</span></div>
+<pre>require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+
+const app = express();
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors());
+app.use(express.json());
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
+
+// Serve frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/accounts', require('./routes/accounts'));
+app.use('/api/deposits', require('./routes/deposits'));
+app.use('/api/trades', require('./routes/trades'));
+
+app.get('/api/health', (req, res) => res.json({ ok: true }));
+
+// SPA fallback: serve app.html for /app route
+app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'public', 'app.html')));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 DTrader on port ${PORT}`));</pre></div>
+
+<h2>Step 7: middleware/auth.js</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">middleware/auth.js</span><span class="file-lang">javascript</span></div>
+<pre>const jwt = require('jsonwebtoken');
+module.exports = function(req, res, next) {
+  const h = req.headers.authorization;
+  if (!h || !h.startsWith('Bearer '))
+    return res.status(401).json({ success: false, message: 'Not authenticated' });
+  try {
+    req.user = jwt.verify(h.split(' ')[1], process.env.JWT_SECRET);
+    next();
+  } catch(e) {
+    res.status(401).json({ success: false, message: 'Token expired' });
+  }
+};</pre></div>
+
+<h2>Step 8: routes/auth.js</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">routes/auth.js</span><span class="file-lang">javascript</span></div>
+<pre>const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Database = require('better-sqlite3');
+const path = require('path');
+const router = express.Router();
+const db = new Database(path.join(__dirname, '..', 'db', 'database.sqlite'));
+
+router.post('/register', async (req, res) => {
+  try {
+    const { email, password, name, phone } = req.body;
+    if (!email || !password || !name)
+      return res.status(400).json({ success: false, message: 'All fields required' });
+    if (db.prepare('SELECT id FROM users WHERE email=?').get(email))
+      return res.status(409).json({ success: false, message: 'Email taken' });
+
+    const hash = await bcrypt.hash(password, 12);
+    const { lastInsertRowid: userId } = db.prepare(
+      'INSERT INTO users (email,password,name,phone) VALUES (?,?,?,?)'
+    ).run(email, hash, name, phone || null);
+
+    // Create both accounts
+    db.prepare('INSERT INTO accounts (user_id,type,balance) VALUES (?,?,?)').run(userId, 'demo', 10000);
+    db.prepare('INSERT INTO accounts (user_id,type,balance) VALUES (?,?,?)').run(userId, 'real', 0);
+
+    const token = jwt.sign({ userId, email, name }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.status(201).json({ success: true, token, user: { id: userId, email, name } });
+  } catch(e) { console.error(e); res.status(500).json({ success: false, message: 'Server error' }); }
+});
+
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ success: false, message: 'Email and password required' });
+    const user = db.prepare('SELECT * FROM users WHERE email=?').get(email);
+    if (!user || !(await bcrypt.compare(password, user.password)))
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, name: user.name },
+      process.env.JWT_SECRET, { expiresIn: '30d' }
+    );
+    res.json({ success: true, token, user: { id: user.id, email: user.email, name: user.name } });
+  } catch(e) { console.error(e); res.status(500).json({ success: false, message: 'Server error' }); }
+});
+
+module.exports = router;</pre></div>
+
+<h2>Step 9: routes/accounts.js</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">routes/accounts.js</span><span class="file-lang">javascript</span></div>
+<pre>const express = require('express');
+const Database = require('better-sqlite3');
+const path = require('path');
+const auth = require('../middleware/auth');
+const router = express.Router();
+const db = new Database(path.join(__dirname, '..', 'db', 'database.sqlite'));
+
+router.get('/', auth, (req, res) => {
+  const accounts = db.prepare('SELECT id,type,balance,currency FROM accounts WHERE user_id=?').all(req.user.userId);
+  res.json({ success: true, accounts });
+});
+
+router.post('/reset-demo', auth, (req, res) => {
+  db.prepare('UPDATE accounts SET balance=10000 WHERE user_id=? AND type=?').run(req.user.userId, 'demo');
+  res.json({ success: true, message: 'Demo reset' });
+});
+
+module.exports = router;</pre></div>
+
+<h2>Step 10: routes/deposits.js (Tuma)</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">routes/deposits.js</span><span class="file-lang">javascript</span></div>
+<pre>const express = require('express');
+const axios = require('axios');
+const Database = require('better-sqlite3');
+const path = require('path');
+const auth = require('../middleware/auth');
+const router = express.Router();
+const db = new Database(path.join(__dirname, '..', 'db', 'database.sqlite'));
+const TUMA = process.env.TUMA_API_URL;
+let tumaToken = null, tumaExp = 0;
+
+async function getToken() {
+  if (tumaToken && Date.now() < tumaExp - 60000) return tumaToken;
+  const { data } = await axios.post(`${TUMA}/auth/token`, {
+    email: process.env.TUMA_EMAIL, api_key: process.env.TUMA_API_KEY
+  });
+  if (!data.success) throw new Error('Tuma auth failed');
+  tumaToken = data.token;
+  tumaExp = Date.now() + data.expires_in * 1000;
+  return tumaToken;
+}
+
+function formatPhone(p) {
+  let n = p.replace(/\D/g, '');
+  if (n.startsWith('0')) n = '254' + n.slice(1);
+  if (!n.startsWith('254')) n = '254' + n;
+  return n;
+}
+
+router.post('/mpesa', auth, async (req, res) => {
+  try {
+    const { amount, phone } = req.body;
+    if (!amount || !phone) return res.status(400).json({ success: false, message: 'Amount and phone required' });
+    if (amount < 1 || amount > 1000) return res.status(400).json({ success: false, message: 'Amount: $1-$1000' });
+
+    const account = db.prepare('SELECT id FROM accounts WHERE user_id=? AND type=?').get(req.user.userId, 'real');
+    if (!account) return res.status(404).json({ success: false, message: 'No real account' });
+
+    const fp = formatPhone(phone);
+    if (fp.length !== 12) return res.status(400).json({ success: false, message: 'Invalid phone' });
+
+    const rate = parseFloat(process.env.USD_KES_RATE) || 130;
+    const kes = Math.ceil(amount * rate);
+    const ref = 'D' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+
+    db.prepare('INSERT INTO deposits (user_id,account_id,method,amount,phone,status,reference) VALUES(?,?,?,?,?,?,?)')
+      .run(req.user.userId, account.id, 'mpesa', amount, fp, 'pending', ref);
+
+    const token = await getToken();
+    const { data } = await axios.post(`${TUMA}/payment/stk-push`, {
+      amount: kes, phone: fp,
+      callback_url: process.env.TUMA_CALLBACK_URL,
+      description: `DTrader $${amount} (${ref})`
+    }, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } });
+
+    if (data.success) {
+      db.prepare('UPDATE deposits SET checkout_id=? WHERE reference=?').run(data.data.checkout_request_id, ref);
+      res.json({ success: true, message: 'Check your phone', reference: ref });
+    } else {
+      db.prepare("UPDATE deposits SET status='failed' WHERE reference=?").run(ref);
+      res.status(400).json({ success: false, message: data.message || 'STK failed' });
+    }
+  } catch(e) {
+    console.error('Deposit err:', e.response?.data || e.message);
+    res.status(500).json({ success: false, message: 'Payment service error' });
+  }
+});
+
+// Tuma callback
+router.post('/callback', (req, res) => {
+  try {
+    const p = req.body;
+    const cid = p.checkout_request_id;
+    if (!cid) return res.json({ success: true });
+
+    const dep = db.prepare("SELECT * FROM deposits WHERE checkout_id=? AND status='pending'").get(cid);
+    if (!dep) return res.json({ success: true });
+
+    if (p.result_code === 0 && p.status === 'completed') {
+      db.prepare("UPDATE deposits SET status='completed', mpesa_receipt=?, completed_at=CURRENT_TIMESTAMP WHERE id=?")
+        .run(p.mpesa_receipt_number || cid, dep.id);
+      db.prepare('UPDATE accounts SET balance=balance+? WHERE id=?').run(dep.amount, dep.account_id);
+      console.log(`✅ $${dep.amount} deposited (${dep.reference})`);
+    } else {
+      db.prepare("UPDATE deposits SET status='failed' WHERE id=?").run(dep.id);
+    }
+    res.json({ success: true });
+  } catch(e) { console.error(e); res.json({ success: true }); }
+});
+
+router.get('/status/:ref', auth, (req, res) => {
+  const d = db.prepare('SELECT status,amount,reference,created_at,completed_at FROM deposits WHERE reference=? AND user_id=?')
+    .get(req.params.ref, req.user.userId);
+  if (!d) return res.status(404).json({ success: false });
+  res.json({ success: true, deposit: d });
+});
+
+router.get('/history', auth, (req, res) => {
+  const d = db.prepare('SELECT * FROM deposits WHERE user_id=? ORDER BY created_at DESC LIMIT 50').all(req.user.userId);
+  res.json({ success: true, deposits: d });
+});
+
+module.exports = router;</pre></div>
+
+<h2>Step 11: routes/trades.js</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">routes/trades.js</span><span class="file-lang">javascript</span></div>
+<pre>const express = require('express');
+const Database = require('better-sqlite3');
+const path = require('path');
+const auth = require('../middleware/auth');
+const router = express.Router();
+const db = new Database(path.join(__dirname, '..', 'db', 'database.sqlite'));
+
+router.post('/', auth, (req, res) => {
+  const { account_id, symbol, trade_type, direction, stake, entry_price } = req.body;
+  const acc = db.prepare('SELECT * FROM accounts WHERE id=? AND user_id=?').get(account_id, req.user.userId);
+  if (!acc) return res.status(404).json({ success: false, message: 'Account not found' });
+  if (acc.balance < stake) return res.status(400).json({ success: false, message: 'Insufficient balance' });
+
+  db.prepare('UPDATE accounts SET balance=balance-? WHERE id=?').run(stake, account_id);
+  const { lastInsertRowid } = db.prepare(
+    'INSERT INTO trades (user_id,account_id,symbol,trade_type,direction,stake,entry_price) VALUES(?,?,?,?,?,?,?)'
+  ).run(req.user.userId, account_id, symbol, trade_type, direction, stake, entry_price);
+
+  res.json({ success: true, tradeId: lastInsertRowid });
+});
+
+router.post('/:id/settle', auth, (req, res) => {
+  const { exit_price, result, pnl } = req.body;
+  const trade = db.prepare('SELECT * FROM trades WHERE id=? AND user_id=?').get(req.params.id, req.user.userId);
+  if (!trade) return res.status(404).json({ success: false });
+  if (trade.result !== 'pending') return res.status(400).json({ success: false, message: 'Already settled' });
+
+  db.prepare('UPDATE trades SET exit_price=?,result=?,pnl=? WHERE id=?').run(exit_price, result, pnl, trade.id);
+  if (result === 'win') {
+    db.prepare('UPDATE accounts SET balance=balance+? WHERE id=?').run(stake + pnl, trade.account_id);
+  }
+  res.json({ success: true, result, pnl });
+});
+
+router.get('/history', auth, (req, res) => {
+  const t = db.prepare('SELECT * FROM trades WHERE user_id=? ORDER BY created_at DESC LIMIT 100').all(req.user.userId);
+  res.json({ success: true, trades: t });
+});
+
+module.exports = router;</pre></div>
+
+<h2>Step 12: public/js/api.js (frontend API helper)</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">public/js/api.js</span><span class="file-lang">javascript</span></div>
+<pre>const API = window.location.origin + '/api';
+
+function getToken() { return localStorage.getItem('dt_token'); }
+function setToken(t) { localStorage.setItem('dt_token', t); }
+function clearToken() { localStorage.removeItem('dt_token'); }
+function isLoggedIn() { return !!getToken(); }
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  const t = getToken();
+  if (t) opts.headers['Authorization'] = `Bearer ${t}`;
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (res.status === 401) { clearToken(); window.location.href = '/'; }
+  return data;
+}
+
+// Auth
+async function register(email, password, name, phone) {
+  const d = await api('POST', '/auth/register', { email, password, name, phone });
+  if (d.success) setToken(d.token);
+  return d;
+}
+async function login(email, password) {
+  const d = await api('POST', '/auth/login', { email, password });
+  if (d.success) setToken(d.token);
+  return d;
+}
+function logout() { clearToken(); window.location.href = '/'; }
+
+// Accounts
+async function getAccounts() { return api('GET', '/accounts'); }
+async function resetDemo() { return api('POST', '/accounts/reset-demo'); }
+
+// Deposits
+async function depositMpesa(amount, phone) {
+  return api('POST', '/deposits/mpesa', { amount: parseFloat(amount), phone });
+}
+async function getDepositStatus(ref) { return api('GET', '/deposits/status/' + ref); }
+async function getDepositHistory() { return api('GET', '/deposits/history'); }
+
+// Trades
+async function placeTrade(data) { return api('POST', '/trades', data); }
+async function settleTrade(id, data) { return api('POST', `/trades/${id}/settle`, data); }
+async function getTradeHistory() { return api('GET', '/trades/history'); }</pre></div>
+
+<h2>Step 13: public/index.html (Login/Register page)</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">public/index.html</span><span class="file-lang">html</span></div>
+<pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;DTrader - Login&lt;/title&gt;
+&lt;link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"&gt;
+&lt;style&gt;
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:#fff;border-radius:16px;padding:32px 24px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+.logo{width:48px;height:48px;background:#ff444f;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:16px;margin:0 auto 20px}
+h1{font-size:22px;font-weight:700;text-align:center;margin-bottom:4px}
+.subtitle{font-size:13px;color:#999;text-align:center;margin-bottom:24px}
+.tabs{display:flex;background:#f0f0f0;border-radius:50px;padding:3px;margin-bottom:20px}
+.tab{flex:1;padding:9px;border:none;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:#666}
+.tab.active{background:#fff;color:#333;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.form{display:none}.form.active{display:block}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:#999;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+.field input{width:100%;padding:12px 14px;border:2px solid #e5e5e5;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border .2s}
+.field input:focus{border-color:#00a79e}
+.btn{width:100%;padding:13px;background:#00a79e;color:#fff;border:none;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+.btn:active{transform:scale(.98)}
+.err{color:#ff444f;font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class="auth-card"&gt;
+  &lt;div class="logo"&gt;DT&lt;/div&gt;
+  &lt;h1&gt;DTrader&lt;/h1&gt;
+  &lt;p class="subtitle"&gt;Trade smarter, not harder&lt;/p&gt;
+
+  &lt;div class="tabs"&gt;
+    &lt;button class="tab active" data-tab="login"&gt;Login&lt;/button&gt;
+    &lt;button class="tab" data-tab="register"&gt;Register&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;form class="form active" id="loginForm"&gt;
+    &lt;div class="field"&gt;&lt;label&gt;Email&lt;/label&gt;&lt;input type="email" id="lEmail" required&gt;&lt;/div&gt;
+    &lt;div class="field"&gt;&lt;label&gt;Password&lt;/label&gt;&lt;input type="password" id="lPass" required&gt;&lt;/div&gt;
+    &lt;button type="submit" class="btn"&gt;Login&lt;/button&gt;
+    &lt;div class="err" id="lErr"&gt;&lt;/div&gt;
+  &lt;/form&gt;
+
+  &lt;form class="form" id="registerForm"&gt;
+    &lt;div class="field"&gt;&lt;label&gt;Full Name&lt;/label&gt;&lt;input type="text" id="rName" required&gt;&lt;/div&gt;
+    &lt;div class="field"&gt;&lt;label&gt;Email&lt;/label&gt;&lt;input type="email" id="rEmail" required&gt;&lt;/div&gt;
+    &lt;div class="field"&gt;&lt;label&gt;Phone (optional)&lt;/label&gt;&lt;input type="tel" id="rPhone" placeholder="0712345678"&gt;&lt;/div&gt;
+    &lt;div class="field"&gt;&lt;label&gt;Password&lt;/label&gt;&lt;input type="password" id="rPass" required minlength="6"&gt;&lt;/div&gt;
+    &lt;button type="submit" class="btn"&gt;Create Account&lt;/button&gt;
+    &lt;div class="err" id="rErr"&gt;&lt;/div&gt;
+  &lt;/form&gt;
+&lt;/div&gt;
+
+&lt;script src="/js/api.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+// If already logged in, go to app
+if (isLoggedIn()) window.location.href = '/app';
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t =&gt; t.addEventListener('click', () =&gt; {
+  document.querySelectorAll('.tab').forEach(x =&gt; x.classList.remove('active'));
+  document.querySelectorAll('.form').forEach(x =&gt; x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById(t.dataset.tab + 'Form').classList.add('active');
+}));
+
+// Login
+document.getElementById('loginForm').addEventListener('submit', async (e) =&gt; {
+  e.preventDefault();
+  const err = document.getElementById('lErr');
+  err.textContent = '';
+  const d = await login(
+    document.getElementById('lEmail').value,
+    document.getElementById('lPass').value
+  );
+  if (d.success) window.location.href = '/app';
+  else err.textContent = d.message;
+});
+
+// Register
+document.getElementById('registerForm').addEventListener('submit', async (e) =&gt; {
+  e.preventDefault();
+  const err = document.getElementById('rErr');
+  err.textContent = '';
+  const d = await register(
+    document.getElementById('rEmail').value,
+    document.getElementById('rPass').value,
+    document.getElementById('rName').value,
+    document.getElementById('rPhone').value
+  );
+  if (d.success) window.location.href = '/app';
+  else err.textContent = d.message;
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre></div>
+
+<h2>Step 14: public/app.html</h2>
+<p>This is your main DTrader trading app (the one we've been building). Add these lines at the top of its <code>&lt;script&gt;</code> section to connect it to the backend:</p>
+
+<div class="file"><div class="file-hdr"><span class="file-name">Add to top of app.html script</span><span class="file-lang">javascript</span></div>
+<pre>// ===== BACKEND CONNECTION =====
+// Load api.js before this script: &lt;script src="/js/api.js"&gt;&lt;/script&gt;
+
+// Redirect to login if not authenticated
+if (!isLoggedIn()) window.location.href = '/';
+
+// Load accounts on start
+let userAccounts = [];
+let activeAccount = null; // 'demo' or 'real'
+
+async function loadAccounts() {
+  const d = await getAccounts();
+  if (d.success) {
+    userAccounts = d.accounts;
+    const demo = userAccounts.find(a => a.type === 'demo');
+    const real = userAccounts.find(a => a.type === 'real');
+    if (!activeAccount) activeAccount = 'demo';
+    const acc = activeAccount === 'demo' ? demo : real;
+    S.bal = acc.balance;
+    uBal();
+    // Update header label
+    document.getElementById('accLbl').textContent = 
+      activeAccount === 'demo' ? 'Demo account' : 'Real account';
+  }
+}
+
+function switchAccount(type) {
+  activeAccount = type;
+  const acc = userAccounts.find(a => a.type === type);
+  if (acc) { S.bal = acc.balance; uBal(); }
+}
+
+// Call on page load
+loadAccounts();
+
+// Deposit handler (called from deposit page)
+async function handleDeposit(amount, phone) {
+  const d = await depositMpesa(amount, phone);
+  if (!d.success) { alert(d.message); return; }
+  
+  // Poll for completion
+  const ref = d.reference;
+  const poll = setInterval(async () => {
+    const s = await getDepositStatus(ref);
+    if (s.deposit?.status === 'completed') {
+      clearInterval(poll);
+      await loadAccounts(); // Refresh balance
+      toast('Deposit successful', '+$' + amount, 'w');
+    } else if (s.deposit?.status === 'failed') {
+      clearInterval(poll);
+      toast('Deposit failed', 'Try again', 'l');
+    }
+  }, 2000);
+  
+  // Stop polling after 90s
+  setTimeout(() => clearInterval(poll), 90000);
+}</pre></div>
+
+<div class="note"><strong>Important:</strong> In your app.html, add <code>&lt;script src="/js/api.js"&gt;&lt;/script&gt;</code> BEFORE your main script tag. The api.js file provides all the functions (login, getAccounts, depositMpesa, etc).</div>
+
+<h2>Step 15: Run it</h2>
+
+<div class="step"><span class="step-num">1</span><strong>Setup database</strong>
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;margin-top:6px">npm run setup</pre></div>
+
+<div class="step"><span class="step-num">2</span><strong>Start server</strong>
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;margin-top:6px">npm run dev</pre></div>
+
+<div class="step"><span class="step-num">3</span><strong>Open browser</strong>
+<p>Go to <code>http://localhost:3000</code> → you'll see login page</p>
+<p>Register → redirects to <code>/app</code> → full trading interface</p></div>
+
+<div class="step"><span class="step-num">4</span><strong>For deposits (Tuma callback)</strong>
+<pre style="background:#1e1e2e;color:#cdd6f4;padding:10px;border-radius:6px;margin-top:6px"># In another terminal:
+npx ngrok http 3000
+
+# Copy the https URL, update .env:
+# TUMA_CALLBACK_URL=https://xxxx.ngrok.io/api/deposits/callback
+
+# Restart server</pre></div>
+
+<h2>Complete Flow</h2>
+<div class="file"><div class="file-hdr"><span class="file-name">user journey</span><span class="file-lang">text</span></div>
+<pre>1. User opens localhost:3000
+   → sees login/register page (index.html)
+
+2. Registers with email + password
+   → backend creates user + demo(10k) + real(0) accounts
+   → JWT token stored in localStorage
+   → redirects to /app
+
+3. Trading app loads (app.html)
+   → fetches accounts from backend
+   → shows demo balance by default
+   → can switch to real account
+
+4. User clicks "Deposit"
+   → deposit modal: enters amount + M-Pesa phone
+   → backend calls Tuma STK push
+   → user confirms on phone
+   → callback credits real account
+   → balance updates live
+
+5. User places trades
+   → deducts from active account balance
+   → settles after duration
+   → records in trade history</pre></div>
+
+<div class="note"><strong>To deploy:</strong> Push to GitHub, connect to Railway.app or Render.com. Set env vars in their dashboard. Point your domain to the deployment. Update TUMA_CALLBACK_URL to your production URL.</div>
+
+</div>
+</body>
+</html>
