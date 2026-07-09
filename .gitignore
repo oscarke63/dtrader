@@ -1,5 +1,7 @@
 node_modules/
 .env
 db/database.sqlite
+db/database.sqlite-shm
+db/database.sqlite-wal
 .vscode/
 *.log
